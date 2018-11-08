@@ -1,0 +1,113 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package WS;
+
+import javax.jws.WebService;
+import javax.jws.WebMethod;
+import javax.jws.WebParam;
+import java.sql.*;
+/**
+ *
+ * @author fcarv
+ */
+@WebService(serviceName = "ServicioBiblio")
+public class ServicioBiblio {
+    Connection con=null;
+    /**
+     * Web service operation
+     */
+    @WebMethod(operationName = "NuevoLibro")
+    public int NuevoLibro(@WebParam(name = "Titulo") String Titulo, @WebParam(name = "Biblioteca") int Biblioteca, @WebParam(name = "Ejemplares") int Ejemplares, @WebParam(name = "Tema") String Tema, @WebParam(name = "Paginas") int Paginas) {
+        int respuesta=0;
+        try{
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/pr1","root","soulcounters96");
+            PreparedStatement c = con.prepareStatement("INSERT INTO libro(Titulo,Cod_Biblio,Ejemplares,Tema,Paginas) VALUES(?,?,?,?,?)");
+            c.setString(1, Titulo);
+            c.setString(2, String.valueOf(Biblioteca));
+            c.setString(3, String.valueOf(Ejemplares));
+            c.setString(4, Tema);
+            c.setString(5, String.valueOf(Paginas));
+            c.executeUpdate();
+            respuesta=1;
+        }catch (Exception e){
+            respuesta=2;
+        }
+        return respuesta;
+    }
+    
+    @WebMethod(operationName = "ConLibro")
+    public int[] ConLibro(@WebParam(name = "Titulo") String Titulo) {
+        int[] respuesta=null;
+        try{
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/pr1","root","soulcounters96");
+            Statement a= con.createStatement();
+            ResultSet b= a.executeQuery("Select * from existencia");
+            while(b.next()){
+                if(b.getString("Titulo").equals(Titulo)){
+                    respuesta = new int[4];
+                    respuesta[0]=b.getInt("Disponible");
+                    respuesta[1]=b.getInt("Prestado");
+                    respuesta[2]=b.getInt("Reparacion");
+                    respuesta[3]=b.getInt("Reserva");
+                }
+            }
+        }catch (Exception e){
+        }
+        return respuesta;
+    }
+    
+    @WebMethod(operationName = "ResLib")
+    public int ResLib(@WebParam(name = "Titulo") String Titulo,@WebParam(name = "Cantidad") int Cantidad) {
+        int respuesta=0;
+        int d=0;
+        int f=0;
+        try{
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/pr1","root","soulcounters96");
+            Statement a= con.createStatement();
+            ResultSet b= a.executeQuery("Select * from existencia");
+            while(b.next()){
+                if(b.getString("Titulo").equals(Titulo)){
+                    d=b.getInt("Disponible");
+                    if(Cantidad>d){
+                        respuesta=2;
+                    } else{
+                       f=d-Cantidad;
+                       Statement c= con.createStatement();
+                       c.executeQuery("UPDATE existencia SET Reparacion="+ Cantidad +" WHERE Titulo='"+Titulo+"';");
+                       
+                       Statement g= con.createStatement();
+                       g.executeQuery("UPDATE existencia SET Disponible="+ f+" WHERE Titulo='"+Titulo+"';");
+                       respuesta=1;
+                    }
+                }
+            }
+        }catch (Exception e){
+        }
+        return respuesta;
+    }
+    @WebMethod(operationName = "NEst")
+    public int NEst(@WebParam(name = "Carnet") int Carnet, @WebParam(name = "Nombre") String Nombre, @WebParam(name = "DPI") int DPI, @WebParam(name = "Telefomo") int Telefono, @WebParam(name = "Dir") String Dir) {
+        int respuesta=0;
+        try{
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/pr1","root","soulcounters96");
+            PreparedStatement c = con.prepareStatement("INSERT INTO estudiante(Carnet,Nombre,DPI,Telefono,Direccion) VALUES(?,?,?,?,?)");
+            c.setString(1, String.valueOf(Carnet));
+            c.setString(2, Nombre);
+            c.setString(3, String.valueOf(DPI));
+            c.setString(4, String.valueOf(Telefono));
+            c.setString(4, Dir);
+            c.executeUpdate();
+            respuesta=1;
+        }catch (Exception e){
+            respuesta=2;
+        }
+        return respuesta;
+    }
+}
